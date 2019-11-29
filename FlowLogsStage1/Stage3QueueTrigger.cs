@@ -76,7 +76,7 @@ namespace NwNsgProject
 
         public static async Task SendMessagesDownstream(string myMessages, TraceWriter log)
         {
-            log.Info($"sending message info {myMessages}");
+            
             await obAvidSecure(myMessages, log);
         }
 
@@ -325,7 +325,6 @@ namespace NwNsgProject
         {
 
             string avidAddress = Util.GetEnvironmentVariable("avidAddress");
-            log.Info($"sending request {avidAddress}");
             // string splunkToken = Util.GetEnvironmentVariable("splunkToken");
 
             if (avidAddress.Length == 0)
@@ -334,18 +333,12 @@ namespace NwNsgProject
                 return;
             }
 
-            //var transmission = new StringBuilder();
-            //foreach (var message in convertToSplunk(newClientContent, null, log))
-            //{
-                //string json = Newtonsoft.Json.JsonConvert.SerializeObject(message);
-              //  transmission.Append(json);
-            //}
+            
             string customerid = Util.GetEnvironmentVariable("customerId");
             NSGFlowLogRecords logs = JsonConvert.DeserializeObject<NSGFlowLogRecords>(newClientContent);
             logs.uuid = customerid;
             string jsonString = JsonConvert.SerializeObject(logs);
 
-            log.Info("issue here");
             var client = new SingleHttpClientInstance();
             try
             {
@@ -353,7 +346,6 @@ namespace NwNsgProject
                 req.Headers.Accept.Clear();
                 req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 // req.Headers.Add("Authorization", "Splunk " + splunkToken);
-                log.Info($"sending request {avidAddress}");
                 req.Content = new StringContent(jsonString, Encoding.UTF8, "application/json");
                 HttpResponseMessage response = await SingleHttpClientInstance.SendToSplunk(req);
                 if (response.StatusCode != HttpStatusCode.OK)
@@ -374,17 +366,7 @@ namespace NwNsgProject
 
         static async Task obSplunk(string newClientContent, TraceWriter log)
         {
-            //
-            // newClientContent looks like this:
-            //
-            // {
-            //   "records":[
-            //     {...},
-            //     {...}
-            //     ...
-            //   ]
-            // }
-            //
+           
 
             string splunkAddress = Util.GetEnvironmentVariable("splunkAddress");
             string splunkToken = Util.GetEnvironmentVariable("splunkToken");
@@ -402,27 +384,6 @@ namespace NwNsgProject
             var transmission = new StringBuilder();
             foreach (var message in convertToSplunk(newClientContent, null, log))
             {
-                //
-                // message looks like this:
-                //
-                // {
-                //   "time": "xxx",
-                //   "category": "xxx",
-                //   "operationName": "xxx",
-                //   "version": "xxx",
-                //   "deviceExtId": "xxx",
-                //   "flowOrder": "xxx",
-                //   "nsgRuleName": "xxx",
-                //   "dmac|smac": "xxx",
-                //   "rt": "xxx",
-                //   "src": "xxx",
-                //   "dst": "xxx",
-                //   "spt": "xxx",
-                //   "dpt": "xxx",
-                //   "proto": "xxx",
-                //   "deviceDirection": "xxx",
-                //   "act": "xxx"
-                //  }
                 transmission.Append(GetSplunkEventFromMessage(message));
             }
 
@@ -453,17 +414,7 @@ namespace NwNsgProject
 
         static System.Collections.Generic.IEnumerable<string> convertToSplunk(string newClientContent, Binder errorRecordBinder, TraceWriter log)
         {
-            //
-            // newClientContent looks like this:
-            //
-            // {
-            //   "records":[
-            //     {...},
-            //     {...}
-            //     ...
-            //   ]
-            // }
-            //
+            
 
             NSGFlowLogRecords logs = JsonConvert.DeserializeObject<NSGFlowLogRecords>(newClientContent);
 

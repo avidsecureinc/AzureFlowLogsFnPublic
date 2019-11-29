@@ -15,8 +15,6 @@ namespace NwNsgProject
 		    if(myTimer.IsPastDue)
 		    {
 		        log.Info("Timer is running late!");
-		    }else{
-		    	log.Info("keeping alive");
 		    }
 		}
 	}

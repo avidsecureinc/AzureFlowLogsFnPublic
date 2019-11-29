@@ -146,7 +146,6 @@ namespace NwNsgProject
             foreach (var chunk in chunks)
             {
                 outputChunks.Add(chunk);
-                log.Info("added chunks");
                 if (chunk.Length == 0)
                 {
                     log.Error("chunk length is 0");
