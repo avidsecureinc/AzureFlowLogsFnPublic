@@ -48,7 +48,6 @@ namespace NwNsgProject
             bool firstBlockItem = true;
             bool foundStartingOffset = false;
             bool tieOffChunk = false;
-            string msg;
 
             int numberOfBlocks = 0;
             long sizeOfBlocks = 0;
