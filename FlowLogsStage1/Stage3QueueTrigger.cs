@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Extensions;
 using Microsoft.Azure.Storage.Blob;
+using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
 using Newtonsoft.Json;
 using System.Net;
