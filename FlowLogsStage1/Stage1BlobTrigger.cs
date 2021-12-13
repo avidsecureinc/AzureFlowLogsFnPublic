@@ -4,6 +4,7 @@ using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Extensions.Logging;
 
 namespace NwNsgProject
 {
@@ -17,19 +18,19 @@ namespace NwNsgProject
             [Queue("stage1", Connection = "AzureWebJobsStorage")] ICollector<Chunk> outputChunks,
             [Table("checkpoints", Connection = "AzureWebJobsStorage")] CloudTable checkpointTable,
             string subId, string resourceGroup, string nsgName, string blobYear, string blobMonth, string blobDay, string blobHour, string blobMinute, string mac,
-            TraceWriter log)
+            ILogger log)
         {
             string nsgSourceDataAccount = Util.GetEnvironmentVariable("nsgSourceDataAccount");
             if (nsgSourceDataAccount.Length == 0)
             {
-                log.Error("Value for nsgSourceDataAccount is required.");
+                log.LogError("Value for nsgSourceDataAccount is required.");
                 throw new System.ArgumentNullException("nsgSourceDataAccount", "Please provide setting.");
             }
 
             string blobContainerName = Util.GetEnvironmentVariable("blobContainerName");
             if (blobContainerName.Length == 0)
             {
-                log.Error("Value for blobContainerName is required.");
+                log.LogError("Value for blobContainerName is required.");
                 throw new System.ArgumentNullException("blobContainerName", "Please provide setting.");
             }
 
@@ -148,7 +149,7 @@ namespace NwNsgProject
                 outputChunks.Add(chunk);
                 if (chunk.Length == 0)
                 {
-                    log.Error("chunk length is 0");
+                    log.LogError("chunk length is 0");
                 }
             }
 

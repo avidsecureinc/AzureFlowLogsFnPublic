@@ -23,14 +23,14 @@ namespace NwNsgProject
             Binder binder, 
             Binder cefLogBinder,
             Binder errorRecordBinder,
-            TraceWriter log)
+            ILogger log)
         {
-            //log.Info($"C# Queue trigger function processed: {inputChunk}");
+            //log.LogError($"C# Queue trigger function processed: {inputChunk}");
 
             string nsgSourceDataAccount = Util.GetEnvironmentVariable("nsgSourceDataAccount");
             if (nsgSourceDataAccount.Length == 0)
             {
-                log.Error("Value for nsgSourceDataAccount is required.");
+                log.LogError("Value for nsgSourceDataAccount is required.");
                 throw new ArgumentNullException("nsgSourceDataAccount", "Please supply in this setting the name of the connection string from which NSG logs should be read.");
             }
 
@@ -50,7 +50,7 @@ namespace NwNsgProject
             }
             catch (Exception ex)
             {
-                log.Error(string.Format("Error binding blob input: {0}", ex.Message));
+                log.LogError(string.Format("Error binding blob input: {0}", ex.Message));
                 throw ex;
             }
 
@@ -74,13 +74,13 @@ namespace NwNsgProject
             }
         }
 
-        public static async Task SendMessagesDownstream(string myMessages, TraceWriter log)
+        public static async Task SendMessagesDownstream(string myMessages, ILogger log)
         {
             
             await obAvidSecure(myMessages, log);
         }
 
-        static async Task CEFLog(string newClientContent, Binder cefLogBinder, Binder errorRecordBinder, TraceWriter log)
+        static async Task CEFLog(string newClientContent, Binder cefLogBinder, Binder errorRecordBinder, ILogger log)
         {
             int count = 0;
             Byte[] transmission = new Byte[] { };
@@ -111,7 +111,7 @@ namespace NwNsgProject
                 }
                 catch (Exception ex)
                 {
-                    log.Error($"Exception logging CEF output: {ex.Message}");
+                    log.LogError($"Exception logging CEF output: {ex.Message}");
                 }
             }
 
@@ -129,7 +129,7 @@ namespace NwNsgProject
             }
         }
 
-        static System.Collections.Generic.IEnumerable<string> convertToCEF(string newClientContent, Binder errorRecordBinder, TraceWriter log)
+        static System.Collections.Generic.IEnumerable<string> convertToCEF(string newClientContent, Binder errorRecordBinder, ILogger log)
         {
             // newClientContent is a json string with records
 
@@ -188,7 +188,7 @@ namespace NwNsgProject
             }
         }
 
-        static async Task logErrorRecord(NSGFlowLogRecord errorRecord, Binder errorRecordBinder, TraceWriter log)
+        static async Task logErrorRecord(NSGFlowLogRecord errorRecord, Binder errorRecordBinder, ILogger log)
         {
             if (errorRecordBinder == null) { return; }
 
@@ -212,11 +212,11 @@ namespace NwNsgProject
             }
             catch (Exception ex)
             {
-                log.Error($"Exception logging record: {ex.Message}");
+                log.LogError($"Exception logging record: {ex.Message}");
             }
         }
 
-        static async Task logErrorRecord(string errorRecord, Binder errorRecordBinder, TraceWriter log)
+        static async Task logErrorRecord(string errorRecord, Binder errorRecordBinder, ILogger log)
         {
             if (errorRecordBinder == null) { return; }
 
@@ -240,11 +240,11 @@ namespace NwNsgProject
             }
             catch (Exception ex)
             {
-                log.Error($"Exception logging record: {ex.Message}");
+                log.LogError($"Exception logging record: {ex.Message}");
             }
         }
 
-        static async Task obArcsight(string newClientContent, TraceWriter log)
+        static async Task obArcsight(string newClientContent, ILogger log)
         {
             //
             // newClientContent looks like this:
@@ -262,7 +262,7 @@ namespace NwNsgProject
 
             if (arcsightAddress.Length == 0 || arcsightPort.Length == 0)
             {
-                log.Error("Values for arcsightAddress and arcsightPort are required.");
+                log.LogError("Values for arcsightAddress and arcsightPort are required.");
                 return;
             }
 
@@ -288,7 +288,7 @@ namespace NwNsgProject
                 }
                 catch (Exception ex)
                 {
-                    log.Error($"Exception sending to ArcSight: {ex.Message}");
+                    log.LogError($"Exception sending to ArcSight: {ex.Message}");
                 }
             }
             if (count > 0)
@@ -299,7 +299,7 @@ namespace NwNsgProject
                 }
                 catch (Exception ex)
                 {
-                    log.Error($"Exception sending to ArcSight: {ex.Message}");
+                    log.LogError($"Exception sending to ArcSight: {ex.Message}");
                 }
             }
             await stream.FlushAsync();
@@ -321,7 +321,7 @@ namespace NwNsgProject
             return false;
         }
 
-        static async Task obAvidSecure(string newClientContent, TraceWriter log)
+        static async Task obAvidSecure(string newClientContent, ILogger log)
         {
 
             string avidAddress = Util.GetEnvironmentVariable("avidAddress");
@@ -329,7 +329,7 @@ namespace NwNsgProject
 
             if (avidAddress.Length == 0)
             {
-                log.Error("Values for splunkAddress and splunkToken are required.");
+                log.LogError("Values for splunkAddress and splunkToken are required.");
                 return;
             }
 
@@ -364,7 +364,7 @@ namespace NwNsgProject
 
         }
 
-        static async Task obSplunk(string newClientContent, TraceWriter log)
+        static async Task obSplunk(string newClientContent, ILogger log)
         {
            
 
@@ -373,7 +373,7 @@ namespace NwNsgProject
 
             if (splunkAddress.Length == 0 || splunkToken.Length == 0)
             {
-                log.Error("Values for splunkAddress and splunkToken are required.");
+                log.LogError("Values for splunkAddress and splunkToken are required.");
                 return;
             }
 
@@ -412,7 +412,7 @@ namespace NwNsgProject
 
         }
 
-        static System.Collections.Generic.IEnumerable<string> convertToSplunk(string newClientContent, Binder errorRecordBinder, TraceWriter log)
+        static System.Collections.Generic.IEnumerable<string> convertToSplunk(string newClientContent, Binder errorRecordBinder, ILogger log)
         {
             
 
@@ -512,7 +512,7 @@ namespace NwNsgProject
                 HttpClient.Timeout = new TimeSpan(0, 1, 0);
             }
 
-            public static async Task<HttpResponseMessage> SendToLogstash(HttpRequestMessage req, TraceWriter log)
+            public static async Task<HttpResponseMessage> SendToLogstash(HttpRequestMessage req, ILogger log)
             {
                 HttpResponseMessage response = null;
                 var httpClient = new HttpClient();
@@ -523,17 +523,17 @@ namespace NwNsgProject
                 }
                 catch (AggregateException ex)
                 {
-                    log.Error("Got AggregateException.");
+                    log.LogError("Got AggregateException.");
                     throw ex;
                 }
                 catch (TaskCanceledException ex)
                 {
-                    log.Error("Got TaskCanceledException.");
+                    log.LogError("Got TaskCanceledException.");
                     throw ex;
                 }
                 catch (Exception ex)
                 {
-                    log.Error("Got other exception.");
+                    log.LogError("Got other exception.");
                     throw ex;
                 }
                 return response;
@@ -547,7 +547,7 @@ namespace NwNsgProject
 
         }
 
-        static async Task obLogstash(string newClientContent, TraceWriter log)
+        static async Task obLogstash(string newClientContent, ILogger log)
         {
             string logstashAddress = Util.GetEnvironmentVariable("logstashAddress");
             string logstashHttpUser = Util.GetEnvironmentVariable("logstashHttpUser");
@@ -555,7 +555,7 @@ namespace NwNsgProject
 
             if (logstashAddress.Length == 0 || logstashHttpUser.Length == 0 || logstashHttpPwd.Length == 0)
             {
-                log.Error("Values for logstashAddress, logstashHttpUser and logstashHttpPwd are required.");
+                log.LogError("Values for logstashAddress, logstashHttpUser and logstashHttpPwd are required.");
                 return;
             }
 
@@ -565,7 +565,7 @@ namespace NwNsgProject
             new System.Net.Security.RemoteCertificateValidationCallback(
                 delegate { return true; });
 
-            // log.Info($"newClientContent: {newClientContent}");
+            // log.LogInformation($"newClientContent: {newClientContent}");
 
             var client = new SingleHttpClientInstance();
             var creds = Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes(string.Format("{0}:{1}", logstashHttpUser, logstashHttpPwd)));
@@ -579,7 +579,7 @@ namespace NwNsgProject
                 HttpResponseMessage response = await SingleHttpClientInstance.SendToLogstash(req, log);
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
-                    log.Error($"StatusCode from Logstash: {response.StatusCode}, and reason: {response.ReasonPhrase}");
+                    log.LogError($"StatusCode from Logstash: {response.StatusCode}, and reason: {response.ReasonPhrase}");
                 }
             }
             catch (System.Net.Http.HttpRequestException e)
@@ -589,7 +589,7 @@ namespace NwNsgProject
                 {
                     msg += " *** " + e.InnerException.Message;
                 }
-                log.Error($"HttpRequestException Error: \"{msg}\" was caught while sending to Logstash.");
+                log.LogError($"HttpRequestException Error: \"{msg}\" was caught while sending to Logstash.");
                 throw e;
             }
             catch (Exception f)
@@ -599,7 +599,7 @@ namespace NwNsgProject
                 {
                     msg += " *** " + f.InnerException.Message;
                 }
-                log.Error($"Unknown error caught while sending to Logstash: \"{f.ToString()}\"");
+                log.LogError($"Unknown error caught while sending to Logstash: \"{f.ToString()}\"");
                 throw f;
             }
         }        
