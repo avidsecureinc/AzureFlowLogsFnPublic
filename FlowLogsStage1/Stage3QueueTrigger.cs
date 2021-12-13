@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Extensions;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.Azure.Storage.Blob;
 using System.Net.Sockets;
 using Newtonsoft.Json;
 using System.Net;
