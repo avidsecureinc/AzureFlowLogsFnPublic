@@ -26,52 +26,57 @@ namespace NwNsgProject
             Binder errorRecordBinder,
             ILogger log)
         {
-            //log.LogError($"C# Queue trigger function processed: {inputChunk}");
-
-            string nsgSourceDataAccount = Util.GetEnvironmentVariable("nsgSourceDataAccount");
-            if (nsgSourceDataAccount.Length == 0)
-            {
-                log.LogError("Value for nsgSourceDataAccount is required.");
-                throw new ArgumentNullException("nsgSourceDataAccount", "Please supply in this setting the name of the connection string from which NSG logs should be read.");
-            }
-
-            var attributes = new Attribute[]
-            {
-                new BlobAttribute(inputChunk.BlobName),
-                new StorageAccountAttribute(nsgSourceDataAccount)
-            };
-
-            string nsgMessagesString;
             try
             {
-                byte[] nsgMessages = new byte[inputChunk.Length];
-                CloudBlockBlob blob = await binder.BindAsync<CloudBlockBlob>(attributes);
-                await blob.DownloadRangeToByteArrayAsync(nsgMessages, 0, inputChunk.Start, inputChunk.Length);
-                nsgMessagesString = System.Text.Encoding.UTF8.GetString(nsgMessages);
-            }
-            catch (Exception ex)
-            {
-                log.LogError(string.Format("Error binding blob input: {0}", ex.Message));
-                throw ex;
-            }
-
-            // skip past the leading comma
-            string trimmedMessages = nsgMessagesString.Trim();
-            int curlyBrace = trimmedMessages.IndexOf('{');
-            string newClientContent = "{\"records\":[";
-            newClientContent += trimmedMessages.Substring(curlyBrace);
-            newClientContent += "]}";
-            
-            await SendMessagesDownstream(newClientContent, log);
-
-            string logOutgoingCEF = Util.GetEnvironmentVariable("logOutgoingCEF");
-            Boolean flag;
-            if (Boolean.TryParse(logOutgoingCEF, out flag))
-            {
-                if (flag)
+                string nsgSourceDataAccount = Util.GetEnvironmentVariable("nsgSourceDataAccount");
+                if (nsgSourceDataAccount.Length == 0)
                 {
-                    await CEFLog(newClientContent, cefLogBinder, errorRecordBinder, log);
+                    log.LogError("Value for nsgSourceDataAccount is required.");
+                    throw new ArgumentNullException("nsgSourceDataAccount", "Please supply in this setting the name of the connection string from which NSG logs should be read.");
                 }
+
+                var attributes = new Attribute[]
+                {
+                    new BlobAttribute(inputChunk.BlobName),
+                    new StorageAccountAttribute(nsgSourceDataAccount)
+                };
+
+                string nsgMessagesString;
+                try
+                {
+                    byte[] nsgMessages = new byte[inputChunk.Length];
+                    CloudBlockBlob blob = await binder.BindAsync<CloudBlockBlob>(attributes);
+                    await blob.DownloadRangeToByteArrayAsync(nsgMessages, 0, inputChunk.Start, inputChunk.Length);
+                    nsgMessagesString = System.Text.Encoding.UTF8.GetString(nsgMessages);
+                }
+                catch (Exception ex)
+                {
+                    log.LogError(string.Format("Error binding blob input: {0}", ex.Message));
+                    throw ex;
+                }
+
+                // skip past the leading comma
+                string trimmedMessages = nsgMessagesString.Trim();
+                int curlyBrace = trimmedMessages.IndexOf('{');
+                string newClientContent = "{\"records\":[";
+                newClientContent += trimmedMessages.Substring(curlyBrace);
+                newClientContent += "]}";
+                
+                await SendMessagesDownstream(newClientContent, log);
+
+                string logOutgoingCEF = Util.GetEnvironmentVariable("logOutgoingCEF");
+                Boolean flag;
+                if (Boolean.TryParse(logOutgoingCEF, out flag))
+                {
+                    if (flag)
+                    {
+                        await CEFLog(newClientContent, cefLogBinder, errorRecordBinder, log);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e, "Function Stage3QueueTrigger is failed to process request");
             }
         }
 
