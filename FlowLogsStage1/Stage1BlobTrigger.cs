@@ -1,11 +1,14 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.Cosmos.Table;
+using Azure.Data.Tables;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
 
 namespace NwNsgProject
 {
@@ -15,9 +18,8 @@ namespace NwNsgProject
 
         [FunctionName("Stage1BlobTrigger")]
         public static void Run(
-            [BlobTrigger("%blobContainerName%/resourceId=/SUBSCRIPTIONS/{subId}/RESOURCEGROUPS/{resourceGroup}/PROVIDERS/MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/{nsgName}/y={blobYear}/m={blobMonth}/d={blobDay}/h={blobHour}/m={blobMinute}/macAddress={mac}/PT1H.json", Connection = "nsgSourceDataConnection")]CloudBlockBlob myBlob,
+            [BlobTrigger("%blobContainerName%/resourceId=/SUBSCRIPTIONS/{subId}/RESOURCEGROUPS/{resourceGroup}/PROVIDERS/MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/{nsgName}/y={blobYear}/m={blobMonth}/d={blobDay}/h={blobHour}/m={blobMinute}/macAddress={mac}/PT1H.json", Connection = "nsgSourceDataConnection")] AppendBlobClient myBlob,
             [Queue("stage1", Connection = "AzureWebJobsStorage")] ICollector<Chunk> outputChunks,
-            [Table("checkpoints", Connection = "AzureWebJobsStorage")] CloudTable checkpointTable,
             string subId, string resourceGroup, string nsgName, string blobYear, string blobMonth, string blobDay, string blobHour, string blobMinute, string mac,
             ILogger log)
         {
@@ -39,8 +41,21 @@ namespace NwNsgProject
 
                 var blobDetails = new BlobDetails(subId, resourceGroup, nsgName, blobYear, blobMonth, blobDay, blobHour, blobMinute, mac);
 
+
+                string storageConnectionString = Util.GetEnvironmentVariable("AzureWebJobsStorage");
+                // Create a TableClient instance
+                TableClient tableClient = new TableClient(storageConnectionString, "checkpoints");
+                // Create table if not exist
+                await tableClient.CreateIfNotExistsAsync();
+
                 // get checkpoint
-                Checkpoint checkpoint = Checkpoint.GetCheckpoint(blobDetails, checkpointTable);
+                Checkpoint checkpoint = await Checkpoint.GetCheckpointActivity(blobDetails, tableClient);
+                // break up the block list into 10k chunks
+
+                var blobProperties = await myBlobActivity.GetPropertiesAsync();
+
+                // get checkpoint
+                Checkpoint checkpoint = Checkpoint.GetCheckpoint(blobDetails, tableClient);
 
                 // break up the block list into 10k chunks
                 List<Chunk> chunks = new List<Chunk>();

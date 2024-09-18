@@ -1,10 +1,15 @@
+using Azure;
 using System;
+using System.IO;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Bindings;
-using Microsoft.Azure.Storage.Blob;
+using Microsoft.Azure.WebJobs.Extensions.Storage;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace NwNsgProject
 {
@@ -16,8 +21,7 @@ namespace NwNsgProject
         public static async Task Run(
             [QueueTrigger("stage1", Connection = "AzureWebJobsStorage")]Chunk inputChunk,
             [Queue("stage2", Connection = "AzureWebJobsStorage")] ICollector<Chunk> outputQueue,
-            Binder binder,
-            ILogger log)
+            Binder binder, ILogger log)
         {
             try
             {
@@ -34,22 +38,22 @@ namespace NwNsgProject
                     throw new ArgumentNullException("nsgSourceDataAccount", "Please supply in this setting the name of the connection string from which NSG logs should be read.");
                 }
 
-                var attributes = new Attribute[]
+                var blobClient = await binder.BindAsync<BlobClient>(new BlobAttribute(inputChunk.BlobName)
                 {
-                    new BlobAttribute(inputChunk.BlobName),
-                    new StorageAccountAttribute(nsgSourceDataAccount)
-                };
+                    Connection = nsgSourceDataAccount
+                });
 
-                byte[] nsgMessages = new byte[inputChunk.Length];
-                try
+                var range = new HttpRange(inputChunk.Start, inputChunk.Length);
+                var downloadOptions = new BlobDownloadOptions
                 {
-                    CloudBlockBlob blob = await binder.BindAsync<CloudBlockBlob>(attributes);
-                    await blob.DownloadRangeToByteArrayAsync(nsgMessages, 0, inputChunk.Start, inputChunk.Length);
-                }
-                catch (Exception ex)
+                    Range = range
+                };
+                BlobDownloadStreamingResult response = await blobClient.DownloadStreamingAsync(downloadOptions);
+                string nsgMessagesString;
+                using (var stream = response.Content)
+                using (var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true))
                 {
-                    log.LogError(string.Format("Error binding blob input: {0}", ex.Message));
-                    throw ex;
+                    nsgMessagesString = await reader.ReadToEndAsync();
                 }
 
                 int startingByte = 0;
