@@ -60,9 +60,6 @@ namespace NwNsgProject
                 var chunkCount = 0;
 
                 var newChunk = GetNewChunk(inputChunk, chunkCount++, log, 0);
-
-                //long length = FindNextRecord(nsgMessages, startingByte);
-                var nsgMessagesString = System.Text.Encoding.Default.GetString(nsgMessages);
                 int endingByte = FindNextRecordRecurse(nsgMessagesString, startingByte, 0, log);
                 int length = endingByte - startingByte + 1;
 
