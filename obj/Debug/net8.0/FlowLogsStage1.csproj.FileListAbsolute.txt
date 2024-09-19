@@ -1,6 +1,0 @@
-/Users/Rajlaxmi/SophosCodebase/Azure.Net/Sophos-Cld-Azure-FlowLogs-Powershell-Functions/obj/Debug/net8.0/FlowLogsStage1.csproj.AssemblyReference.cache
-/Users/Rajlaxmi/SophosCodebase/Azure.Net/Sophos-Cld-Azure-FlowLogs-Powershell-Functions/obj/Debug/net8.0/FlowLogsStage1.GeneratedMSBuildEditorConfig.editorconfig
-/Users/Rajlaxmi/SophosCodebase/Azure.Net/Sophos-Cld-Azure-FlowLogs-Powershell-Functions/obj/Debug/net8.0/FlowLogsStage1.AssemblyInfoInputs.cache
-/Users/Rajlaxmi/SophosCodebase/Azure.Net/Sophos-Cld-Azure-FlowLogs-Powershell-Functions/obj/Debug/net8.0/FlowLogsStage1.AssemblyInfo.cs
-/Users/Rajlaxmi/SophosCodebase/Azure.Net/Sophos-Cld-Azure-FlowLogs-Powershell-Functions/obj/Debug/net8.0/FlowLogsStage1.csproj.CoreCompileInputs.cache
-/Users/Rajlaxmi/SophosCodebase/Azure.Net/Sophos-Cld-Azure-FlowLogs-Powershell-Functions/obj/Debug/net8.0/FlowLogsStage1.sourcelink.json

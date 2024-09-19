@@ -18,7 +18,7 @@ namespace NwNsgProject
 
         [FunctionName("Stage1BlobTrigger")]
         public static async Task Run(
-            [BlobTrigger("%blobContainerName%/resourceId=/SUBSCRIPTIONS/{subId}/RESOURCEGROUPS/{resourceGroup}/PROVIDERS/MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/{nsgName}/y={blobYear}/m={blobMonth}/d={blobDay}/h={blobHour}/m={blobMinute}/macAddress={mac}/PT1H.json", Connection = "nsgSourceDataConnection")] AppendBlobClient myBlob,
+            [BlobTrigger("%blobContainerName%/resourceId=/SUBSCRIPTIONS/{subId}/RESOURCEGROUPS/{resourceGroup}/PROVIDERS/MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/{nsgName}/y={blobYear}/m={blobMonth}/d={blobDay}/h={blobHour}/m={blobMinute}/macAddress={mac}/PT1H.json", Connection = "nsgSourceDataConnection")] BlockBlobClient myBlob,
             [Queue("stage1", Connection = "AzureWebJobsStorage")] ICollector<Chunk> outputChunks,
             string subId, string resourceGroup, string nsgName, string blobYear, string blobMonth, string blobDay, string blobHour, string blobMinute, string mac,
             ILogger log)
@@ -67,13 +67,14 @@ namespace NwNsgProject
                 int numberOfBlocks = 0;
                 long sizeOfBlocks = 0;
 
-                foreach (var blockListItem in myBlob.DownloadBlockList(BlockListingFilter.Committed))
+                var blockList = await myBlob.GetBlockListAsync(BlockListTypes.Committed);
+                foreach (var blockListItem in blockList.Value.CommittedBlocks)
                 {
                     if (!foundStartingOffset)
                     {
                         if (firstBlockItem)
                         {
-                            currentStartingByteOffset += blockListItem.Length;
+                            currentStartingByteOffset += blockListItem.SizeLong;
                             firstBlockItem = false;
                             if (checkpoint.LastBlockName == "")
                             {
@@ -86,7 +87,7 @@ namespace NwNsgProject
                             {
                                 foundStartingOffset = true;
                             }
-                            currentStartingByteOffset += blockListItem.Length;
+                            currentStartingByteOffset += blockListItem.SizeLong;
                         }
                     }
                     else
@@ -110,7 +111,7 @@ namespace NwNsgProject
                         //   a) add chunk to list  <-- tieOffChunk
                         //   b) do not add blockListItem to chunk
                         //   c) loop terminates
-                        tieOffChunk = (currentChunkSize != 0) && ((blockListItem.Length < 10) || (currentChunkSize + blockListItem.Length > MAXDOWNLOADBYTES));
+                        tieOffChunk = (currentChunkSize != 0) && ((blockListItem.SizeLong < 10) || (currentChunkSize + blockListItem.SizeLong > MAXDOWNLOADBYTES));
                         if (tieOffChunk)
                         {
                             // chunk complete, add it to the list & reset counters
@@ -126,12 +127,12 @@ namespace NwNsgProject
                             currentChunkSize = 0;
                             tieOffChunk = false;
                         }
-                        if (blockListItem.Length > 10)
+                        if (blockListItem.SizeLong > 10)
                         {
                             numberOfBlocks++;
-                            sizeOfBlocks += blockListItem.Length;
+                            sizeOfBlocks += blockListItem.SizeLong;
 
-                            currentChunkSize += blockListItem.Length;
+                            currentChunkSize += blockListItem.SizeLong;
                             currentChunkLastBlockName = blockListItem.Name;
                         }
                     }
