@@ -54,9 +54,6 @@ namespace NwNsgProject
 
                 var blobProperties = await myBlob.GetPropertiesAsync();
 
-                // get checkpoint
-                // Checkpoint checkpoint = Checkpoint.GetCheckpoint(blobDetails, tableClient);
-
                 // break up the block list into 10k chunks
                 List<Chunk> chunks = new List<Chunk>();
                 long currentChunkSize = 0;
@@ -156,7 +153,6 @@ namespace NwNsgProject
                 if (chunks.Count > 0)
                 {
                     var lastChunk = chunks[chunks.Count - 1];
-                    // checkpoint.PutCheckpointActivity(tableClient, blobSize);
                     checkpoint.PutCheckpoint(tableClient, lastChunk.LastBlockName, lastChunk.Start + lastChunk.Length);
                 }
 

@@ -102,11 +102,6 @@ namespace NwNsgProject
                     if (count++ == 1000)
                     {
                         Guid guid = Guid.NewGuid();
-                        // var attributes = new Attribute[]
-                        // {
-                        //     new BlobAttribute(String.Format("ceflog/{0}", guid)),
-                        //     new StorageAccountAttribute("cefLogAccount")
-                        // };
 
                         var blob = await cefLogBinder.BindAsync<BlobClient>(new BlobAttribute(String.Format("ceflog/{0}", guid)){
                             Connection = "cefLogAccount"
@@ -127,11 +122,6 @@ namespace NwNsgProject
             if (count != 0)
             {
                 Guid guid = Guid.NewGuid();
-                // var attributes = new Attribute[]
-                // {
-                //     new BlobAttribute(String.Format("ceflog/{0}", guid)),
-                //     new StorageAccountAttribute("cefLogAccount")
-                // };
 
                 var blobClient = await cefLogBinder.BindAsync<BlobClient>(new BlobAttribute(String.Format("ceflog/{0}", guid)){
                     Connection = "cefLogAccount"
@@ -211,11 +201,6 @@ namespace NwNsgProject
                 transmission = AppendToTransmission(transmission, errorRecord.ToString());
 
                 Guid guid = Guid.NewGuid();
-                // var attributes = new Attribute[]
-                // {
-                //     new BlobAttribute(String.Format("errorrecord/{0}", guid)),
-                //     new StorageAccountAttribute("cefLogAccount")
-                // };
 
                 var blobClient = await errorRecordBinder.BindAsync<BlobClient>(new BlobAttribute(String.Format("errorrecord/{0}", guid)){
                     Connection = "cefLogAccount"
@@ -241,11 +226,6 @@ namespace NwNsgProject
                 transmission = AppendToTransmission(transmission, errorRecord);
 
                 Guid guid = Guid.NewGuid();
-                // var attributes = new Attribute[]
-                // {
-                //     new BlobAttribute(String.Format("errorrecord/{0}", guid)),
-                //     new StorageAccountAttribute("cefLogAccount")
-                // };
 
                 var blobClient = await errorRecordBinder.BindAsync<BlobClient>(new BlobAttribute(String.Format("errorrecord/{0}", guid))
                 {
