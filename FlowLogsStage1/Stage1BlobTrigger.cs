@@ -74,7 +74,7 @@ namespace NwNsgProject
                     {
                         if (firstBlockItem)
                         {
-                            currentStartingByteOffset += blockListItem.SizeLong;
+                            currentStartingByteOffset += blockListItem.Size;
                             firstBlockItem = false;
                             if (checkpoint.LastBlockName == "")
                             {
@@ -87,7 +87,7 @@ namespace NwNsgProject
                             {
                                 foundStartingOffset = true;
                             }
-                            currentStartingByteOffset += blockListItem.SizeLong;
+                            currentStartingByteOffset += blockListItem.Size;
                         }
                     }
                     else
@@ -111,7 +111,7 @@ namespace NwNsgProject
                         //   a) add chunk to list  <-- tieOffChunk
                         //   b) do not add blockListItem to chunk
                         //   c) loop terminates
-                        tieOffChunk = (currentChunkSize != 0) && ((blockListItem.SizeLong < 10) || (currentChunkSize + blockListItem.SizeLong > MAXDOWNLOADBYTES));
+                        tieOffChunk = (currentChunkSize != 0) && ((blockListItem.Size < 10) || (currentChunkSize + blockListItem.Size > MAXDOWNLOADBYTES));
                         if (tieOffChunk)
                         {
                             // chunk complete, add it to the list & reset counters
@@ -127,12 +127,12 @@ namespace NwNsgProject
                             currentChunkSize = 0;
                             tieOffChunk = false;
                         }
-                        if (blockListItem.SizeLong > 10)
+                        if (blockListItem.Size > 10)
                         {
                             numberOfBlocks++;
-                            sizeOfBlocks += blockListItem.SizeLong;
+                            sizeOfBlocks += blockListItem.Size;
 
-                            currentChunkSize += blockListItem.SizeLong;
+                            currentChunkSize += blockListItem.Size;
                             currentChunkLastBlockName = blockListItem.Name;
                         }
                     }
