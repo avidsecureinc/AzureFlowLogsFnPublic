@@ -102,14 +102,17 @@ namespace NwNsgProject
                     if (count++ == 1000)
                     {
                         Guid guid = Guid.NewGuid();
-                        var attributes = new Attribute[]
-                        {
-                            new BlobAttribute(String.Format("ceflog/{0}", guid)),
-                            new StorageAccountAttribute("cefLogAccount")
-                        };
+                        // var attributes = new Attribute[]
+                        // {
+                        //     new BlobAttribute(String.Format("ceflog/{0}", guid)),
+                        //     new StorageAccountAttribute("cefLogAccount")
+                        // };
 
-                        CloudBlockBlob blob = await cefLogBinder.BindAsync<CloudBlockBlob>(attributes);
-                        await blob.UploadFromByteArrayAsync(transmission, 0, transmission.Length);
+                        var blob = await cefLogBinder.BindAsync<BlobClient>(new BlobAttribute(String.Format("ceflog/{0}", guid)){
+                            Connection = "cefLogAccount"
+                        });
+                        using MemoryStream stream = new MemoryStream(transmission);
+                        await blob.UploadAsync(stream, true);
 
                         count = 0;
                         transmission = new Byte[] { };
@@ -124,14 +127,17 @@ namespace NwNsgProject
             if (count != 0)
             {
                 Guid guid = Guid.NewGuid();
-                var attributes = new Attribute[]
-                {
-                    new BlobAttribute(String.Format("ceflog/{0}", guid)),
-                    new StorageAccountAttribute("cefLogAccount")
-                };
+                // var attributes = new Attribute[]
+                // {
+                //     new BlobAttribute(String.Format("ceflog/{0}", guid)),
+                //     new StorageAccountAttribute("cefLogAccount")
+                // };
 
-                CloudBlockBlob blob = await cefLogBinder.BindAsync<CloudBlockBlob>(attributes);
-                await blob.UploadFromByteArrayAsync(transmission, 0, transmission.Length);
+                var blobClient = await cefLogBinder.BindAsync<BlobClient>(new BlobAttribute(String.Format("ceflog/{0}", guid)){
+                    Connection = "cefLogAccount"
+                });
+                using MemoryStream stream = new MemoryStream(transmission);
+                await blobClient.UploadAsync(stream, true);
             }
         }
 
@@ -205,15 +211,17 @@ namespace NwNsgProject
                 transmission = AppendToTransmission(transmission, errorRecord.ToString());
 
                 Guid guid = Guid.NewGuid();
-                var attributes = new Attribute[]
-                {
-                    new BlobAttribute(String.Format("errorrecord/{0}", guid)),
-                    new StorageAccountAttribute("cefLogAccount")
-                };
+                // var attributes = new Attribute[]
+                // {
+                //     new BlobAttribute(String.Format("errorrecord/{0}", guid)),
+                //     new StorageAccountAttribute("cefLogAccount")
+                // };
 
-                CloudBlockBlob blob = await errorRecordBinder.BindAsync<CloudBlockBlob>(attributes);
-                blob.UploadFromByteArray(transmission, 0, transmission.Length);
-
+                var blobClient = await errorRecordBinder.BindAsync<BlobClient>(new BlobAttribute(String.Format("errorrecord/{0}", guid)){
+                    Connection = "cefLogAccount"
+                });
+                using MemoryStream stream = new MemoryStream(transmission);
+                await blobClient.UploadAsync(stream, true);
                 transmission = new Byte[] { };
             }
             catch (Exception ex)
@@ -233,14 +241,18 @@ namespace NwNsgProject
                 transmission = AppendToTransmission(transmission, errorRecord);
 
                 Guid guid = Guid.NewGuid();
-                var attributes = new Attribute[]
-                {
-                    new BlobAttribute(String.Format("errorrecord/{0}", guid)),
-                    new StorageAccountAttribute("cefLogAccount")
-                };
+                // var attributes = new Attribute[]
+                // {
+                //     new BlobAttribute(String.Format("errorrecord/{0}", guid)),
+                //     new StorageAccountAttribute("cefLogAccount")
+                // };
 
-                CloudBlockBlob blob = await errorRecordBinder.BindAsync<CloudBlockBlob>(attributes);
-                blob.UploadFromByteArray(transmission, 0, transmission.Length);
+                var blobClient = await errorRecordBinder.BindAsync<BlobClient>(new BlobAttribute(String.Format("errorrecord/{0}", guid))
+                {
+                    Connection = "cefLogAccount"
+                });
+                using MemoryStream stream = new MemoryStream(transmission);
+                await blobClient.UploadAsync(stream, true);
 
                 transmission = new Byte[] { };
             }

@@ -17,7 +17,7 @@ namespace NwNsgProject
         const int MAXDOWNLOADBYTES = 1024000;
 
         [FunctionName("Stage1BlobTrigger")]
-        public static void Run(
+        public static async Task Run(
             [BlobTrigger("%blobContainerName%/resourceId=/SUBSCRIPTIONS/{subId}/RESOURCEGROUPS/{resourceGroup}/PROVIDERS/MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/{nsgName}/y={blobYear}/m={blobMonth}/d={blobDay}/h={blobHour}/m={blobMinute}/macAddress={mac}/PT1H.json", Connection = "nsgSourceDataConnection")] AppendBlobClient myBlob,
             [Queue("stage1", Connection = "AzureWebJobsStorage")] ICollector<Chunk> outputChunks,
             string subId, string resourceGroup, string nsgName, string blobYear, string blobMonth, string blobDay, string blobHour, string blobMinute, string mac,
@@ -49,13 +49,13 @@ namespace NwNsgProject
                 await tableClient.CreateIfNotExistsAsync();
 
                 // get checkpoint
-                Checkpoint checkpoint = await Checkpoint.GetCheckpointActivity(blobDetails, tableClient);
+                Checkpoint checkpoint = await Checkpoint.GetCheckpoint(blobDetails, tableClient);
                 // break up the block list into 10k chunks
 
                 var blobProperties = await myBlob.GetPropertiesAsync();
 
                 // get checkpoint
-                Checkpoint checkpoint = Checkpoint.GetCheckpoint(blobDetails, tableClient);
+                // Checkpoint checkpoint = Checkpoint.GetCheckpoint(blobDetails, tableClient);
 
                 // break up the block list into 10k chunks
                 List<Chunk> chunks = new List<Chunk>();
@@ -156,7 +156,8 @@ namespace NwNsgProject
                 if (chunks.Count > 0)
                 {
                     var lastChunk = chunks[chunks.Count - 1];
-                    checkpoint.PutCheckpoint(checkpointTable, lastChunk.LastBlockName, lastChunk.Start + lastChunk.Length);
+                    // checkpoint.PutCheckpointActivity(tableClient, blobSize);
+                    checkpoint.PutCheckpoint(tableClient, lastChunk.LastBlockName, lastChunk.Start + lastChunk.Length);
                 }
 
                 // add the chunks to output queue
