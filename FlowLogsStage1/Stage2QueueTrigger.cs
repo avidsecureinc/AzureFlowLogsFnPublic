@@ -81,7 +81,7 @@ namespace NwNsgProject
                 if (newChunk.Length > 0)
                 {
                     outputQueue.Add(newChunk);
-                    log.LogInformation("Staging-2 testing branch")
+                    log.LogInformation("Staging-2 testing branch");
                     //log.LogInformation($"Chunk starts at {newChunk.Start}, length is {newChunk.Length}");
                 }
             }
