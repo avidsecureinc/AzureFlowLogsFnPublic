@@ -1,10 +1,18 @@
-﻿using System;
-using Microsoft.Azure.Cosmos.Table;
+﻿using Azure;
+using System;
+using Azure.Data.Tables;
+using System.Threading.Tasks;
 
 namespace NwNsgProject
 {
-    public class Checkpoint : TableEntity
+    public class Checkpoint : ITableEntity
     {
+
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
 
         public string LastBlockName { get; set; }
         public long StartingByteOffset { get; set; }
@@ -21,51 +29,45 @@ namespace NwNsgProject
             StartingByteOffset = offset;
         }
 
-        public static Checkpoint GetCheckpoint(BlobDetails blobDetails, CloudTable checkpointTable)
+        public static async Task<Checkpoint> GetCheckpoint(BlobDetails blobDetails, TableClient tableClient)
         {
-            TableOperation operation = TableOperation.Retrieve<Checkpoint>(
-                blobDetails.GetPartitionKey(), blobDetails.GetRowKey());
-            TableResult result = checkpointTable.Execute(operation);
-
-            Checkpoint checkpoint = (Checkpoint)result.Result;
-            if (checkpoint == null)
+            try
             {
-                checkpoint = new Checkpoint(blobDetails.GetPartitionKey(), blobDetails.GetRowKey(), "", 0);
+                return await tableClient.GetEntityAsync<Checkpoint>(blobDetails.GetPartitionKey(), blobDetails.GetRowKey());
             }
-
-            return checkpoint;
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                // If the entity is not found, return a new Checkpoint
+                return new Checkpoint(blobDetails.GetPartitionKey(), blobDetails.GetRowKey(), "", 0);
+            }
         }
 
-        public static Checkpoint GetCheckpointActivity(BlobDetailsActivity blobDetails, CloudTable checkpointTable)
+        public static async Task<Checkpoint> GetCheckpointActivity(BlobDetailsActivity blobDetails, TableClient checkpointTable)
         {
-            TableOperation operation = TableOperation.Retrieve<Checkpoint>(
-                blobDetails.GetPartitionKey(), blobDetails.GetRowKey());
-            TableResult result = checkpointTable.Execute(operation);
-
-            Checkpoint checkpoint = (Checkpoint)result.Result;
-            if (checkpoint == null)
+            try
             {
-                checkpoint = new Checkpoint(blobDetails.GetPartitionKey(), blobDetails.GetRowKey(), "", 0);
+                return await checkpointTable.GetEntityAsync<Checkpoint>(blobDetails.GetPartitionKey(), blobDetails.GetRowKey());
             }
-
-            return checkpoint;
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                // If the entity is not found, return a new Checkpoint
+                return new Checkpoint(blobDetails.GetPartitionKey(), blobDetails.GetRowKey(), "", 0);
+            }
         }
 
-        public void PutCheckpoint(CloudTable checkpointTable, string lastBlockName, long startingByteOffset)
+        public async Task PutCheckpoint(TableClient tableClient, string lastBlockName, long startingByteOffset)
         {
             LastBlockName = lastBlockName;
             StartingByteOffset = startingByteOffset;
 
-            TableOperation operation = TableOperation.InsertOrReplace(this);
-            checkpointTable.Execute(operation);
+            await tableClient.UpsertEntityAsync(this);
         }
 
-        public void PutCheckpointActivity(CloudTable checkpointTable, long startingByteOffset)
+        public async void PutCheckpointActivity(TableClient tableClient, long startingByteOffset)
         {
             StartingByteOffset = startingByteOffset;
 
-            TableOperation operation = TableOperation.InsertOrReplace(this);
-            checkpointTable.Execute(operation);
+            await tableClient.UpsertEntityAsync(this);
         }
     }
 }
