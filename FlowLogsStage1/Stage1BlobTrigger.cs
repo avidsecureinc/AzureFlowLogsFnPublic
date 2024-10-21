@@ -50,7 +50,6 @@ namespace NwNsgProject
 
                 // get checkpoint
                 Checkpoint checkpoint = await Checkpoint.GetCheckpoint(blobDetails, tableClient);
-                // break up the block list into 10k chunks
 
                 var blobProperties = await myBlob.GetPropertiesAsync();
 
